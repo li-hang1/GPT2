@@ -1,7 +1,7 @@
 import torch
 from torch import nn
-from .Attention import MaskedMultiHeadSelfAttention
-from .FeedForward import FeedForward
+from Attention import MaskedMultiHeadSelfAttention
+from FeedForward import FeedForward
 
 class TransformerLayer(nn.Module):
     def __init__(self, d_model, num_heads, expand_radio=4, dropout=0.1):
@@ -24,12 +24,12 @@ class TransformerLayer(nn.Module):
         return x
 
 class GPT2Model(nn.Module):
-    def __init__(self, layers, vocab_size, d_model, num_heads, max_seq_len=2056, expand_radio=4, dropout=0.1):
+    def __init__(self, n_layers, vocab_size, d_model, num_heads, max_seq_len=2056, expand_radio=4, dropout=0.1):
         super().__init__()
         self.token_embedding = nn.Embedding(vocab_size, d_model)
         self.position_embedding = nn.Embedding(max_seq_len, d_model)
         self.dropout_embedding = nn.Dropout(dropout)
-        self.transformers = nn.ModuleList([TransformerLayer(d_model, num_heads, expand_radio, dropout) for _ in range(layers)])
+        self.transformers = nn.ModuleList([TransformerLayer(d_model, num_heads, expand_radio, dropout) for _ in range(n_layers)])
         self.ln = nn.LayerNorm(d_model)
         self.max_seq_len = max_seq_len
 
@@ -62,8 +62,8 @@ class GPT2Model(nn.Module):
 
 
 if __name__ == "__main__":
-    x = torch.randint(0, 100, (16, 8), dtype=torch.int64)
+    x = torch.randint(0, 100, (1, 8), dtype=torch.int64)
     model = GPT2Model(3, 8724, 16, 4)
-    output = model(x)
+    output = model(x, (8,))
     print(output.shape)
 

@@ -4,7 +4,7 @@ class FeedForward(nn.Module):
     def __init__(self, d_model, expand_radio=4, dropout=0.1):
         super().__init__()
         self.linear1 = nn.Linear(d_model, d_model * expand_radio)
-        self.activation = nn.ReLU()
+        self.activation = nn.GELU(approximate="tanh")
         self.dropout = nn.Dropout(p=dropout)
         self.linear2 = nn.Linear(d_model * expand_radio, d_model)
     def forward(self, x):
