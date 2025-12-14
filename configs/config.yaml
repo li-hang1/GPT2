@@ -1,5 +1,5 @@
 model:
-  n_layer: 24
+  n_layer: 12
   vocab_size: 8724
   d_model: 1024
   num_heads: 16
@@ -12,6 +12,6 @@ data:
 lr: 0.0002
 batch_size: 4
 resume: False
-epoch: 100
+epochs: 100
 pretrained: pretrained
 eval_epoch_interval: 1
