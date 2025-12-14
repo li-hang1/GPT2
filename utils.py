@@ -65,3 +65,35 @@ def run_one_epoch(model, dataloader, criterion, optimizer, epoch=0, train=True, 
                 print(f"Epoch: {epoch} batch_idx: {batch_idx+1} | Loss {loss.item():.4f}")
 
     return total_loss / step_count
+
+import random
+
+def split_train_val(json_path, train_out, val_out, val_ratio=0.02, seed=42):
+
+    with open(json_path, "r", encoding="utf-8") as f:
+        data = json.load(f)
+
+    assert isinstance(data, list), "JSON 顶层必须是 list[dict]"
+
+    random.seed(seed)
+    random.shuffle(data)
+
+    n_total = len(data)
+    n_val = int(n_total * val_ratio)
+
+    val_data = data[:n_val]
+    train_data = data[n_val:]
+
+    with open(train_out, "w", encoding="utf-8") as f:
+        json.dump(train_data, f, ensure_ascii=False, indent=2)
+
+    with open(val_out, "w", encoding="utf-8") as f:
+        json.dump(val_data, f, ensure_ascii=False, indent=2)
+
+    print(f"总样本数: {n_total}")
+    print(f"训练集: {len(train_data)}")
+    print(f"验证集: {len(val_data)}")
+
+
+if __name__ == "__main__":
+    split_train_val(json_path="data.json", train_out="train.json", val_out="val.json", val_ratio=0.02)

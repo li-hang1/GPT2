@@ -35,7 +35,7 @@ def main(config):
     model_config = config["model"]
     model = GPT2Model(**model_config).cuda()
     model = DDP(model, device_ids=[local_rank])
-    optimizer = AdamW(model.parameters(), lr=config["lr"])
+    optimizer = AdamW(model.parameters(), lr=config["lr"], betas=(0.9,0.999))
     criterion = nn.CrossEntropyLoss(reduction='none')
 
     best_val = float("inf")
@@ -51,7 +51,8 @@ def main(config):
     for epoch in range(start_epoch, config["epochs"]):
         train_sampler.set_epoch(epoch)
 
-        train_loss = run_one_epoch(model, train_dataloader, criterion, optimizer, epoch, train=True, log_interval=100, is_main=is_main)
+        train_loss = run_one_epoch(model, train_dataloader, criterion, optimizer, epoch, train=True, log_interval=1000,
+                                   is_main=is_main)
         if is_main:
             print(f"Epoch: {epoch} | Train loss: {train_loss:.4f}")
 
