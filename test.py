@@ -6,21 +6,23 @@ from model.Transformer import GPT2Model
 from dataset import Tokenizer
 
 
-config_path = "config.yaml"
+config_path = "configs/config.yaml"
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
 def load_model(config):
     model_config = config["model"]
     model = GPT2Model(**model_config).to(device)
 
-    ckpt_path = model_config["pretrained"]
+    ckpt_path = config["pretrained"]
     assert os.path.exists(ckpt_path), f"Checkpoint not found: {ckpt_path}"
 
     ckpt = torch.load(ckpt_path, map_location="cpu")
     model.load_state_dict(ckpt["model"])
     model.eval()
 
-    print(f"Loaded checkpoint from {ckpt_path}")
+    print(f"Loaded pretrained weights from {ckpt_path}")
+    print(f"epoch: {ckpt['epoch']}")
+    print(f"val_loss: {ckpt['best_val']}")
     return model
 
 @torch.no_grad()
@@ -58,6 +60,7 @@ def generate_title(model, tokenizer, content_text, max_new_tokens=500, temperatu
 
         probs = torch.softmax(next_logits, dim=-1)
         next_token = torch.multinomial(probs, num_samples=1)  # 按概率采样
+        print(f"next_token: {next_token.item()}")
 
         if next_token.item() == eos_id:
             break
@@ -71,7 +74,7 @@ def generate_title(model, tokenizer, content_text, max_new_tokens=500, temperatu
 def main():
     config = load_yaml(config_path)
 
-    tokenizer = Tokenizer(config["vocab_path"])
+    tokenizer = Tokenizer(config["data"]["vocab_path"])
     model = load_model(config)
 
     print("输入正文，回车生成标题（输入 q 退出）\n")
@@ -81,8 +84,8 @@ def main():
         if text.lower() in {"q", "quit", "exit"}:
             break
 
-        title = generate_title(model=model, tokenizer=tokenizer, content_text=text, max_new_tokens=32, temperature=0.9,
-                               top_k=50, top_p=0.9)
+        title = generate_title(model=model, tokenizer=tokenizer, content_text=text, max_new_tokens=500, temperature=1.0,
+                               top_k=0, top_p=1.0)
         print(f"标题：{title}\n")
 
 if __name__ == "__main__":

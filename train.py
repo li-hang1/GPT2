@@ -27,7 +27,7 @@ def main(config):
     train_dataset = TitleGenDataset(vocab_path=config["data"]["vocab_path"], data_path=config["data"]["train_data_path"])
     val_dataset = TitleGenDataset(vocab_path=config["data"]["vocab_path"], data_path=config["data"]["val_data_path"])
     train_sampler = DistributedSampler(train_dataset, num_replicas=world_size, rank=rank, shuffle=True)
-    val_sampler = DistributedSampler(train_dataset, num_replicas=world_size, rank=rank, shuffle=False)
+    val_sampler = DistributedSampler(val_dataset, num_replicas=world_size, rank=rank, shuffle=False)
     train_dataloader = DataLoader(train_dataset, batch_size=config["batch_size"], sampler=train_sampler, num_workers=20,
                                   pin_memory=True, collate_fn=collate_fn)
     val_dataloader = DataLoader(val_dataset, batch_size=config["batch_size"], sampler=val_sampler, num_workers=20,
@@ -55,18 +55,16 @@ def main(config):
                                    is_main=is_main)
         if is_main:
             print(f"Epoch: {epoch} | Train loss: {train_loss:.4f}")
-
-        if (epoch+1) % config["eval_epoch_interval"]:
-            val_loss = run_one_epoch(model, val_dataloader, criterion, optimizer=None, train=False)
-            if is_main:
+            if (epoch+1) % config["eval_epoch_interval"] == 0:
+                val_loss = run_one_epoch(model, val_dataloader, criterion, optimizer=None, train=False)
                 print(f"Epoch: {epoch} | Val loss: {val_loss:.4f}")
-            if val_loss < best_val:
-                best_val = val_loss
-                torch.save({"model": model.module.state_dict(),
-                            "optimizer": optimizer.state_dict(),
-                            "epoch": epoch,
-                            "best_val": best_val}, os.path.join(config["pretrained"], f"best.pth"))
-                print(f"Best validation model saved. Epoch: {epoch}, Validation loss: {best_val:.4f}")
+                if val_loss < best_val:
+                    best_val = val_loss
+                    torch.save({"model": model.module.state_dict(),
+                                "optimizer": optimizer.state_dict(),
+                                "epoch": epoch,
+                                "best_val": best_val}, os.path.join(config["pretrained"], f"best.pth"))
+                    print(f"Best validation model saved. Epoch: {epoch}, Validation loss: {best_val:.4f}")
 
     dist.destroy_process_group()
 

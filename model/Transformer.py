@@ -1,7 +1,7 @@
 import torch
 from torch import nn
-from Attention import MaskedMultiHeadSelfAttention
-from FeedForward import FeedForward
+from .Attention import MaskedMultiHeadSelfAttention
+from .FeedForward import FeedForward
 
 class TransformerLayer(nn.Module):
     def __init__(self, d_model, num_heads, expand_radio=4, dropout=0.1):
